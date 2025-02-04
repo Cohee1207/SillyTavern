@@ -190,13 +190,13 @@ router.post('/searxng', jsonParser, async (request, response) => {
         const searchUrl = new URL('/search', baseUrl);
         const searchParams = new URLSearchParams();
         searchParams.append('q', query);
-        if (preferences) {
-            searchParams.append('preferences', preferences);
-        }
         if (categories) {
             searchParams.append('categories', categories);
         }
         searchUrl.search = searchParams.toString();
+        if (preferences) {
+            searchUrl.search = `${searchUrl.search}&${preferences}`;
+        }
 
         const searchResult = await fetch(searchUrl, { headers: visitHeaders });
 
