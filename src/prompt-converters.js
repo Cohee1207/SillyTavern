@@ -360,6 +360,7 @@ export function convertCohereMessages(messages, names) {
  */
 export function convertGooglePrompt(messages, model, useSysPrompt, names) {
     const visionSupportedModels = [
+        'gemini-2.0-flash',
         'gemini-2.0-flash-thinking-exp-1219',
         'gemini-2.0-flash-exp',
         'gemini-1.5-flash',

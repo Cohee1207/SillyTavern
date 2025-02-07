@@ -300,6 +300,7 @@ async function sendMakerSuiteRequest(request, response) {
         }
 
         const should_use_system_prompt = (
+            model.includes('gemini-2.0-flash') ||
             model.includes('gemini-2.0-flash-thinking-exp') ||
             model.includes('gemini-2.0-flash-exp') ||
             model.includes('gemini-1.5-flash') ||
@@ -310,7 +311,7 @@ async function sendMakerSuiteRequest(request, response) {
         const prompt = convertGooglePrompt(request.body.messages, model, should_use_system_prompt, getPromptNames(request));
         let safetySettings = GEMINI_SAFETY;
 
-        if (model.includes('gemini-2.0-flash-exp')) {
+        if (model.includes('gemini-2.0-flash-exp') || model.includes('gemini-2.0-flash')) {
             safetySettings = GEMINI_SAFETY.map(setting => ({ ...setting, threshold: 'OFF' }));
         }
 
