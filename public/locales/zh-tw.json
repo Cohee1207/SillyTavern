@@ -2357,8 +2357,6 @@
     "Forbid": "禁止",
     "Aphrodite only. Determines the order of samplers. Skew is always applied post-softmax, so it's not included here.": "僅限 Aphrodite 使用。決定採樣器的順序。偏移總是在 softmax 後應用，因此不包括在此。",
     "Aphrodite only. Determines the order of samplers.": "僅限 Aphrodite 使用。決定採樣器的順序。",
-    "Request model reasoning": "請求模型思維鏈",
-    "Allows the model to return its thinking process.": "讓模型回傳其思考過程。",
     "Generic (OpenAI-compatible) [LM Studio, LiteLLM, etc.]": "通用（兼容 OpenAI）[LM Studio, LiteLLM 等]",
     "Model ID (optional)": "模型 ID（可選）",
     "DeepSeek API Key": "DeepSeek API 金鑰",

@@ -288,7 +288,6 @@ async function sendMakerSuiteRequest(request, response) {
 
     const model = String(request.body.model);
     const stream = Boolean(request.body.stream);
-    const showThoughts = Boolean(request.body.include_reasoning);
     const isThinking = model.includes('thinking');
 
     const generationConfig = {
@@ -335,12 +334,6 @@ async function sendMakerSuiteRequest(request, response) {
 
         if (should_use_system_prompt) {
             body.systemInstruction = prompt.system_instruction;
-        }
-
-        if (isThinking && showThoughts) {
-            generationConfig.thinkingConfig = {
-                includeThoughts: true,
-            };
         }
 
         return body;
@@ -981,6 +974,7 @@ router.post('/generate', jsonParser, function (request, response) {
         headers = { ...OPENROUTER_HEADERS };
         bodyParams = {
             'transforms': getOpenRouterTransforms(request),
+            'include_reasoning': true,
         };
 
         if (request.body.min_p !== undefined) {
@@ -1004,10 +998,6 @@ router.post('/generate', jsonParser, function (request, response) {
 
         if (request.body.use_fallback) {
             bodyParams['route'] = 'fallback';
-        }
-
-        if (request.body.include_reasoning) {
-            bodyParams['include_reasoning'] = true;
         }
 
         let cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1);

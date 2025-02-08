@@ -54,8 +54,6 @@ export function extractReasoningFromData(data) {
             break;
 
         case 'openai':
-            if (!oai_settings.show_thoughts) break;
-
             switch (oai_settings.chat_completion_source) {
                 case chat_completion_sources.DEEPSEEK:
                     return data?.choices?.[0]?.message?.reasoning_content ?? '';

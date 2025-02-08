@@ -298,7 +298,6 @@ const default_settings = {
     names_behavior: character_names_behavior.DEFAULT,
     continue_postfix: continue_postfix_types.SPACE,
     custom_prompt_post_processing: custom_prompt_post_processing_types.NONE,
-    show_thoughts: true,
     reasoning_effort: 'medium',
     seed: -1,
     n: 1,
@@ -378,7 +377,6 @@ const oai_settings = {
     names_behavior: character_names_behavior.DEFAULT,
     continue_postfix: continue_postfix_types.SPACE,
     custom_prompt_post_processing: custom_prompt_post_processing_types.NONE,
-    show_thoughts: true,
     reasoning_effort: 'medium',
     seed: -1,
     n: 1,
@@ -1913,7 +1911,6 @@ async function sendOpenAIRequest(type, messages, signal) {
         'user_name': name1,
         'char_name': name2,
         'group_names': getGroupNames(),
-        'include_reasoning': Boolean(oai_settings.show_thoughts),
         'reasoning_effort': String(oai_settings.reasoning_effort),
     };
 
@@ -2149,21 +2146,15 @@ function getStreamingReply(data, state) {
     if (oai_settings.chat_completion_source === chat_completion_sources.CLAUDE) {
         return data?.delta?.text || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.MAKERSUITE) {
-        if (oai_settings.show_thoughts) {
-            state.reasoning += (data?.candidates?.[0]?.content?.parts?.filter(x => x.thought)?.map(x => x.text)?.[0] || '');
-        }
+        state.reasoning += (data?.candidates?.[0]?.content?.parts?.filter(x => x.thought)?.map(x => x.text)?.[0] || '');
         return data?.candidates?.[0]?.content?.parts?.filter(x => !x.thought)?.map(x => x.text)?.[0] || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.COHERE) {
         return data?.delta?.message?.content?.text || data?.delta?.message?.tool_plan || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.DEEPSEEK) {
-        if (oai_settings.show_thoughts) {
-            state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning_content)?.[0]?.delta?.reasoning_content || '');
-        }
+        state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning_content)?.[0]?.delta?.reasoning_content || '');
         return data.choices?.[0]?.delta?.content || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.OPENROUTER) {
-        if (oai_settings.show_thoughts) {
-            state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning)?.[0]?.delta?.reasoning || '');
-        }
+        state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning)?.[0]?.delta?.reasoning || '');
         return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
     } else {
         return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
@@ -3122,7 +3113,6 @@ function loadOpenAISettings(data, settings) {
     oai_settings.image_inlining = settings.image_inlining ?? default_settings.image_inlining;
     oai_settings.inline_image_quality = settings.inline_image_quality ?? default_settings.inline_image_quality;
     oai_settings.bypass_status_check = settings.bypass_status_check ?? default_settings.bypass_status_check;
-    oai_settings.show_thoughts = settings.show_thoughts ?? default_settings.show_thoughts;
     oai_settings.reasoning_effort = settings.reasoning_effort ?? default_settings.reasoning_effort;
     oai_settings.seed = settings.seed ?? default_settings.seed;
     oai_settings.n = settings.n ?? default_settings.n;
@@ -3251,7 +3241,6 @@ function loadOpenAISettings(data, settings) {
     $('#repetition_penalty_counter_openai').val(Number(oai_settings.repetition_penalty_openai));
     $('#seed_openai').val(oai_settings.seed);
     $('#n_openai').val(oai_settings.n);
-    $('#openai_show_thoughts').prop('checked', oai_settings.show_thoughts);
 
     $('#openai_reasoning_effort').val(oai_settings.reasoning_effort);
     $(`#openai_reasoning_effort option[value="${oai_settings.reasoning_effort}"]`).prop('selected', true);
@@ -3515,7 +3504,6 @@ async function saveOpenAIPreset(name, settings, triggerUi = true) {
         continue_prefill: settings.continue_prefill,
         continue_postfix: settings.continue_postfix,
         function_calling: settings.function_calling,
-        show_thoughts: settings.show_thoughts,
         reasoning_effort: settings.reasoning_effort,
         seed: settings.seed,
         n: settings.n,
@@ -3974,7 +3962,6 @@ function onSettingsPresetChange() {
         continue_prefill: ['#continue_prefill', 'continue_prefill', true],
         continue_postfix: ['#continue_postfix', 'continue_postfix', false],
         function_calling: ['#openai_function_calling', 'function_calling', true],
-        show_thoughts: ['#openai_show_thoughts', 'show_thoughts', true],
         reasoning_effort: ['#openai_reasoning_effort', 'reasoning_effort', false],
         seed: ['#seed_openai', 'seed', false],
         n: ['#n_openai', 'n', false],
@@ -5515,11 +5502,6 @@ export function initOpenAI() {
     $('#continue_postfix_double_newline').on('input', function () {
         oai_settings.continue_postfix = continue_postfix_types.DOUBLE_NEWLINE;
         setContinuePostfixControls();
-        saveSettingsDebounced();
-    });
-
-    $('#openai_show_thoughts').on('input', function () {
-        oai_settings.show_thoughts = !!$(this).prop('checked');
         saveSettingsDebounced();
     });
 

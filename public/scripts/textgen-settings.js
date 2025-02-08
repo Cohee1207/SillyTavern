@@ -172,7 +172,6 @@ const settings = {
     //truncation_length: 2048,
     ban_eos_token: false,
     skip_special_tokens: true,
-    include_reasoning: true,
     streaming: false,
     mirostat_mode: 0,
     mirostat_tau: 5,
@@ -264,7 +263,6 @@ export const setting_names = [
     'add_bos_token',
     'ban_eos_token',
     'skip_special_tokens',
-    'include_reasoning',
     'streaming',
     'mirostat_mode',
     'mirostat_tau',
@@ -742,7 +740,6 @@ jQuery(function () {
             'add_bos_token_textgenerationwebui': true,
             'temperature_last_textgenerationwebui': true,
             'skip_special_tokens_textgenerationwebui': true,
-            'include_reasoning_textgenerationwebui': true,
             'top_a_textgenerationwebui': 0,
             'top_a_counter_textgenerationwebui': 0,
             'mirostat_mode_textgenerationwebui': 0,
@@ -1270,7 +1267,6 @@ export function getTextGenGenerationData(finalPrompt, maxTokens, isImpersonate, 
         'truncation_length': max_context,
         'ban_eos_token': settings.ban_eos_token,
         'skip_special_tokens': settings.skip_special_tokens,
-        'include_reasoning': settings.include_reasoning,
         'top_a': settings.top_a,
         'tfs': settings.tfs,
         'epsilon_cutoff': [OOBA, MANCER].includes(settings.type) ? settings.epsilon_cutoff : undefined,
@@ -1368,6 +1364,7 @@ export function getTextGenGenerationData(finalPrompt, maxTokens, isImpersonate, 
     if (settings.type === OPENROUTER) {
         params.provider = settings.openrouter_providers;
         params.allow_fallbacks = settings.openrouter_allow_fallbacks;
+        params.include_reasoning = true;
     }
 
     if (settings.type === KOBOLDCPP) {
