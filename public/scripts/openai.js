@@ -104,6 +104,8 @@ const default_continue_nudge_prompt = '[Continue the following message. Do not i
 const default_bias = 'Default (none)';
 const default_personality_format = '{{personality}}';
 const default_scenario_format = '{{scenario}}';
+const default_description_format = '{{description}}';
+const default_persona_format = '{{persona}}';
 const default_group_nudge_prompt = '[Write the next reply only as {{char}}.]';
 const default_bias_presets = {
     [default_bias]: [],
@@ -252,6 +254,8 @@ const default_settings = {
     group_nudge_prompt: default_group_nudge_prompt,
     scenario_format: default_scenario_format,
     personality_format: default_personality_format,
+    description_format: default_description_format,
+    persona_format: default_persona_format,
     openai_model: 'gpt-4-turbo',
     claude_model: 'claude-3-5-sonnet-20240620',
     google_model: 'gemini-1.5-pro',
@@ -332,6 +336,8 @@ const oai_settings = {
     group_nudge_prompt: default_group_nudge_prompt,
     scenario_format: default_scenario_format,
     personality_format: default_personality_format,
+    description_format: default_description_format,
+    persona_format: default_persona_format,
     openai_model: 'gpt-4-turbo',
     claude_model: 'claude-3-5-sonnet-20240620',
     google_model: 'gemini-1.5-pro',
@@ -1084,6 +1090,8 @@ async function populateChatCompletion(prompts, chatCompletion, { bias, quietProm
 async function preparePromptsForChatCompletion({ Scenario, charPersonality, name2, worldInfoBefore, worldInfoAfter, charDescription, quietPrompt, bias, extensionPrompts, systemPromptOverride, jailbreakPromptOverride, personaDescription }) {
     const scenarioText = Scenario && oai_settings.scenario_format ? substituteParams(oai_settings.scenario_format) : '';
     const charPersonalityText = charPersonality && oai_settings.personality_format ? substituteParams(oai_settings.personality_format) : '';
+    const charDescriptionText = charDescription && oai_settings.description_format ? substituteParams(oai_settings.description_format) : '';
+    const personaDescriptionText = personaDescription && oai_settings.persona_format ? substituteParams(oai_settings.persona_format) : '';
     const groupNudge = substituteParams(oai_settings.group_nudge_prompt);
     const impersonationPrompt = oai_settings.impersonation_prompt ? substituteParams(oai_settings.impersonation_prompt) : '';
 
@@ -1092,8 +1100,9 @@ async function preparePromptsForChatCompletion({ Scenario, charPersonality, name
         // Ordered prompts for which a marker should exist
         { role: 'system', content: formatWorldInfo(worldInfoBefore), identifier: 'worldInfoBefore' },
         { role: 'system', content: formatWorldInfo(worldInfoAfter), identifier: 'worldInfoAfter' },
-        { role: 'system', content: charDescription, identifier: 'charDescription' },
+        { role: 'system', content: charDescriptionText, identifier: 'charDescription' },
         { role: 'system', content: charPersonalityText, identifier: 'charPersonality' },
+        { role: 'system', content: personaDescriptionText, identifier: 'personaDescription' },
         { role: 'system', content: scenarioText, identifier: 'scenario' },
         // Unordered prompts without marker
         { role: 'system', content: impersonationPrompt, identifier: 'impersonate' },
@@ -1148,7 +1157,7 @@ async function preparePromptsForChatCompletion({ Scenario, charPersonality, name
 
     // Persona Description
     if (power_user.persona_description && power_user.persona_description_position === persona_description_positions.IN_PROMPT) {
-        systemPrompts.push({ role: 'system', content: power_user.persona_description, identifier: 'personaDescription' });
+        systemPrompts.push({ role: 'system', content: oai_settings.persona_format, identifier: 'personaDescription' });
     }
 
     const knownExtensionPrompts = [
@@ -3088,6 +3097,8 @@ function loadOpenAISettings(data, settings) {
     oai_settings.wi_format = settings.wi_format ?? default_settings.wi_format;
     oai_settings.scenario_format = settings.scenario_format ?? default_settings.scenario_format;
     oai_settings.personality_format = settings.personality_format ?? default_settings.personality_format;
+    oai_settings.description_format = settings.description_format ?? default_settings.description_format;
+    oai_settings.persona_format = settings.persona_format ?? default_settings.persona_format;
     oai_settings.group_nudge_prompt = settings.group_nudge_prompt ?? default_settings.group_nudge_prompt;
     oai_settings.claude_model = settings.claude_model ?? default_settings.claude_model;
     oai_settings.windowai_model = settings.windowai_model ?? default_settings.windowai_model;
@@ -3226,6 +3237,8 @@ function loadOpenAISettings(data, settings) {
     $('#wi_format_textarea').val(oai_settings.wi_format);
     $('#scenario_format_textarea').val(oai_settings.scenario_format);
     $('#personality_format_textarea').val(oai_settings.personality_format);
+    $('#description_format_textarea').val(oai_settings.description_format);
+    $('#persona_format_textarea').val(oai_settings.persona_format);
     $('#group_nudge_prompt_textarea').val(oai_settings.group_nudge_prompt);
     $('#send_if_empty_textarea').val(oai_settings.send_if_empty);
 
@@ -3497,6 +3510,8 @@ async function saveOpenAIPreset(name, settings, triggerUi = true) {
         wi_format: settings.wi_format,
         scenario_format: settings.scenario_format,
         personality_format: settings.personality_format,
+        description_format: settings.description_format,
+        persona_format: settings.persona_format,
         group_nudge_prompt: settings.group_nudge_prompt,
         stream_openai: settings.stream_openai,
         prompts: settings.prompts,
@@ -3956,6 +3971,8 @@ function onSettingsPresetChange() {
         wi_format: ['#wi_format_textarea', 'wi_format', false],
         scenario_format: ['#scenario_format_textarea', 'scenario_format', false],
         personality_format: ['#personality_format_textarea', 'personality_format', false],
+        description_format: ['#description_format_textarea', 'description_format', false],
+        persona_format: ['#persona_format_textarea', 'persona_format', false],
         group_nudge_prompt: ['#group_nudge_prompt_textarea', 'group_nudge_prompt', false],
         stream_openai: ['#stream_toggle', 'stream_openai', true],
         prompts: ['', 'prompts', false],
@@ -5269,6 +5286,16 @@ export function initOpenAI() {
         saveSettingsDebounced();
     });
 
+    $('#description_format_textarea').on('input', function () {
+        oai_settings.description_format = String($('#description_format_textarea').val());
+        saveSettingsDebounced();
+    });
+
+    $('#persona_format_textarea').on('input', function () {
+        oai_settings.persona_format = String($('#persona_format_textarea').val());
+        saveSettingsDebounced();
+    });
+
     $('#group_nudge_prompt_textarea').on('input', function () {
         oai_settings.group_nudge_prompt = String($('#group_nudge_prompt_textarea').val());
         saveSettingsDebounced();
@@ -5325,6 +5352,18 @@ export function initOpenAI() {
     $('#personality_format_restore').on('click', function () {
         oai_settings.personality_format = default_personality_format;
         $('#personality_format_textarea').val(oai_settings.personality_format);
+        saveSettingsDebounced();
+    });
+
+    $('#description_format_restore').on('click', function () {
+        oai_settings.description_format = default_description_format;
+        $('#description_format_textarea').val(oai_settings.description_format);
+        saveSettingsDebounced();
+    });
+
+    $('#persona_format_restore').on('click', function () {
+        oai_settings.persona_format = default_persona_format;
+        $('#persona_format_textarea').val(oai_settings.persona_format);
         saveSettingsDebounced();
     });
 

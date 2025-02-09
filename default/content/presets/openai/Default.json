@@ -41,6 +41,8 @@
     "wi_format": "{0}",
     "scenario_format": "{{scenario}}",
     "personality_format": "{{personality}}",
+    "description_format": "{{description}}",
+    "persona_format": "{{persona}}",
     "group_nudge_prompt": "[Write the next reply only as {{char}}.]",
     "stream_openai": true,
     "prompts": [
