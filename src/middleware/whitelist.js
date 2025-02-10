@@ -72,9 +72,12 @@ export default function whitelistMiddleware(whitelistMode, listen) {
         }
 
         //clientIp = req.connection.remoteAddress.split(':').pop();
-        if (whitelistMode === true && !whitelist.some(x => ipMatching.matches(clientIp, ipMatching.getMatch(x)))
-            || forwardedIp && whitelistMode === true && !whitelist.some(x => ipMatching.matches(forwardedIp, ipMatching.getMatch(x)))
-        ) {
+
+        // clientIp is not on the whitelist
+        const cond1 = whitelistMode === true && !whitelist.some(x => ipMatching.matches(clientIp, ipMatching.getMatch(x)))
+        // forwardedIp is not on the whitelist
+        const cond2 = forwardedIp && whitelistMode === true && !whitelist.some(x => ipMatching.matches(forwardedIp, ipMatching.getMatch(x)))
+        if (cond1 && cond2) {
             // Log the connection attempt with real IP address
             const ipDetails = forwardedIp ? `${clientIp} (forwarded from ${forwardedIp})` : clientIp;
             console.log(color.red('Forbidden: Connection attempt from ' + ipDetails + '. If you are attempting to connect, please add your IP address in whitelist or disable whitelist mode in config.yaml in root of SillyTavern folder.\n'));
