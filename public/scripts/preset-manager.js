@@ -586,7 +586,6 @@ class PresetManager {
             'tabby_model',
             'derived',
             'generic_model',
-            'include_reasoning',
         ];
         const settings = Object.assign({}, getSettingsByApiId(this.apiId));
 

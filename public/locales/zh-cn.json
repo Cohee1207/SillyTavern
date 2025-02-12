@@ -266,8 +266,6 @@
     "Use system prompt": "使用系统提示词",
     "Merges_all_system_messages_desc_1": "合并所有系统消息，直到第一条具有非系统角色的消息，然后通过",
     "Merges_all_system_messages_desc_2": "字段发送。",
-    "Request model reasoning": "请求思维链",
-    "Allows the model to return its thinking process.": "允许模型返回其思维过程。",
     "Assistant Prefill": "AI预填",
     "Expand the editor": "展开编辑器",
     "Start Claude's answer with...": "以如下内容开始Claude的回答...",

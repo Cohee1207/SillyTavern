@@ -1385,8 +1385,6 @@
     "enable_functions_desc_1": "Autorise l'utilisation",
     "enable_functions_desc_2": "outils de fonction",
     "enable_functions_desc_3": "Peut être utilisé par diverses extensions pour fournir des fonctionnalités supplémentaires.",
-    "Request model reasoning": "Demander les pensées du modèle",
-    "Allows the model to return its thinking process.": "Permet au modèle de retourner son processus de réflexion.",
     "Confirm token parsing with": "Confirmer l'analyse des tokens avec",
     "openai_logit_bias_no_items": "Aucun élément",
     "api_no_connection": "Pas de connection...",
