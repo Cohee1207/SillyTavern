@@ -3,8 +3,12 @@ import path from 'node:path';
 import url from 'node:url';
 
 import express from 'express';
-import { getConfigValue } from './util.js';
-const enableServerPlugins = getConfigValue('enableServerPlugins', false);
+import { default as git } from 'simple-git';
+import { sync as commandExistsSync } from 'command-exists';
+import { getConfigValue, color } from './util.js';
+
+const enableServerPlugins = !!getConfigValue('enableServerPlugins', false);
+const enableServerPluginsAutoUpdate = !!getConfigValue('enableServerPluginsAutoUpdate', true);
 
 /**
  * Map of loaded plugins.
@@ -53,6 +57,8 @@ export async function loadPlugins(app, pluginsPath) {
     if (files.length === 0) {
         return emptyFn;
     }
+
+    await updatePlugins(pluginsPath);
 
     for (const file of files) {
         const pluginFilePath = path.join(pluginsPath, file);
@@ -213,4 +219,60 @@ async function initPlugin(app, plugin, exitHooks) {
     }
 
     return true;
+}
+
+/**
+ * Automatically update all git plugins in the ./plugins directory
+ * @param {string} pluginsPath Path to plugins directory
+ */
+async function updatePlugins(pluginsPath) {
+    if (!enableServerPluginsAutoUpdate) {
+        return;
+    }
+
+    const directories = fs.readdirSync(pluginsPath)
+        .filter(file => !file.startsWith('.'))
+        .filter(file => fs.statSync(path.join(pluginsPath, file)).isDirectory());
+
+    if (directories.length === 0) {
+        return;
+    }
+
+    console.log(color.blue('Auto-updating server plugins... Set'), color.yellow('enableServerPluginsAutoUpdate: false'), color.blue('in config.yaml to disable this feature.'));
+
+    if (!commandExistsSync('git')) {
+        console.error(color.red('Git is not installed. Please install Git to enable auto-updating of server plugins.'));
+        return;
+    }
+
+    let pluginsToUpdate = 0;
+
+    for (const directory of directories) {
+        try {
+            const pluginPath = path.join(pluginsPath, directory);
+            const pluginRepo = git(pluginPath);
+            await pluginRepo.fetch();
+            const commitHash = await pluginRepo.revparse(['HEAD']);
+            const trackingBranch = await pluginRepo.revparse(['--abbrev-ref', '@{u}']);
+            const log = await pluginRepo.log({
+                from: commitHash,
+                to: trackingBranch,
+            });
+
+            if (log.total === 0) {
+                continue;
+            }
+
+            pluginsToUpdate++;
+            await pluginRepo.pull();
+            const latestCommit = await pluginRepo.revparse(['HEAD']);
+            console.log(`Plugin ${color.green(directory)} updated to commit ${color.cyan(latestCommit)}`);
+        } catch (error) {
+            console.error(color.red(`Failed to update plugin ${directory}: ${error.message}`));
+        }
+    }
+
+    if (pluginsToUpdate === 0) {
+        console.log('All plugins are up to date.');
+    }
 }
