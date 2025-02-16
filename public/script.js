@@ -1966,7 +1966,6 @@ export async function sendTextareaMessage() {
     if (is_send_press) return;
     if (isExecutingCommandsFromChatInput) return;
     if (this_edit_mes_id) return; // don't proceed if editing a message
-
     let generateType;
     // "Continue on send" is activated when the user hits "send" (or presses enter) on an empty chat box, and the last
     // message was sent from a character (not the user or the system).
@@ -10026,20 +10025,14 @@ jQuery(async function () {
         if (!is_delete_mode || !$(this).children('.del_checkbox').is(':visible')) {
             return;
         }
-        $('.mes').children('.del_checkbox').each(function () {
-            $(this).prop('checked', false);
-            $(this).parent().removeClass('selected');
-        });
-        $(this).addClass('selected'); //sets the bg of the mes selected for deletion
-        var i = Number($(this).attr('mesid')); //checks the message ID in the chat
-        this_del_mes = i;
-        //as long as the current message ID is less than the total chat length
-        while (i < chat.length) {
-            //sets the bg of the all msgs BELOW the selected .mes
-            $(`.mes[mesid="${i}"]`).addClass('selected');
-            $(`.mes[mesid="${i}"]`).children('.del_checkbox').prop('checked', true);
-            i++;
-        }
+
+        const checkbox = $(this).children('.del_checkbox');
+
+        // force the checkbox to match the selected class state
+        const isCurrentlySelected = $(this).hasClass('selected');
+        checkbox.prop('checked', !isCurrentlySelected);
+        $(this).toggleClass('selected');
+
     });
 
     $(document).on('click', '.PastChat_cross', function (e) {
@@ -10550,31 +10543,47 @@ jQuery(async function () {
 
     //confirms message deletion with the "ok" button
     $('#dialogue_del_mes_ok').on('click', async function () {
-        $('#dialogue_del_mes').css('display', 'none');
-        $('#send_form').css('display', css_send_form_display);
-        $('.del_checkbox').each(function () {
-            $(this).css('display', 'none');
-            $(this).parent().children('.for_checkbox').css('display', 'block');
-            $(this).parent().removeClass('selected');
-            $(this).prop('checked', false);
-        });
 
-        if (this_del_mes >= 0) {
-            $(`.mes[mesid="${this_del_mes}"]`).nextAll('div').remove();
-            $(`.mes[mesid="${this_del_mes}"]`).remove();
-            chat.length = this_del_mes;
-            await saveChatConditional();
-            chatElement.scrollTop(chatElement[0].scrollHeight);
-            await eventSource.emit(event_types.MESSAGE_DELETED, chat.length);
-            $('#chat .mes').removeClass('last_mes');
-            $('#chat .mes').last().addClass('last_mes');
-        } else {
-            console.log('this_del_mes is not >= 0, not deleting');
+        // Get all checked messages
+        const selectedMessages = $('.del_checkbox:checked').map(function () {
+            return Number($(this).closest('.mes').attr('mesid'));
+        }).get();
+
+        console.log('[DeleteMode] Selected messages to delete:', selectedMessages);
+
+        // Sort in reverse order so we can delete from end of array first
+        selectedMessages.sort((a, b) => b - a);
+
+        // Delete each selected message
+        for (const mesid of selectedMessages) {
+            chat.splice(mesid, 1);
+            $(`.mes[mesid="${mesid}"]`).remove();
         }
+
+        // Clean up UI state
+        $('.del_checkbox')
+            .css('display', 'none')
+            .prop('checked', false)  // Explicitly uncheck all checkboxes
+            .parent()
+            .children('.for_checkbox')
+            .css('display', 'block')
+            .parent()
+            .removeClass('selected');
+
+        // Update IDs and save
+        updateViewMessageIds(selectedMessages.includes(0));
+        await saveChatConditional();
+
+        // Reset state and update UI
+        chatElement.scrollTop(chatElement[0].scrollHeight);
+        await eventSource.emit(event_types.MESSAGE_DELETED, chat.length);
+        $('#chat .mes').removeClass('last_mes');
+        $('#chat .mes').last().addClass('last_mes');
 
         showSwipeButtons();
         this_del_mes = -1;
         is_delete_mode = false;
+        console.log('[DeleteMode] Process complete');
     });
 
     $('#settings_preset').change(function () {
