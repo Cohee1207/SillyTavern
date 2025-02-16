@@ -76,6 +76,10 @@ export async function loadPlugins(app, pluginsPath) {
         await loadFromFile(app, pluginFilePath, exitHooks);
     }
 
+    if (loadedPlugins.size > 0) {
+        console.log(`${loadedPlugins.size} server plugin(s) are currently loaded. Make sure you know exactly what they do, and only install plugins from trusted sources!`);
+    }
+
     // Call all plugin "exit" functions at once and wait for them to finish
     return () => Promise.all(exitHooks.map(exitFn => exitFn()));
 }
