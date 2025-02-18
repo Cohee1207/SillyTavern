@@ -11,10 +11,17 @@ export const urlencodedParser = express.urlencoded({ extended: true, limit: '200
  * @returns {string} IP address of the client
  */
 export function getIpFromRequest(req) {
+    // First check X-Real-IP header
+    if (req.headers['x-real-ip']) {
+        return req.headers['x-real-ip'].toString();
+    }
+
+    // Fall back to socket remote address
     let clientIp = req.socket.remoteAddress;
     if (!clientIp) {
         return 'unknown';
     }
+
     let ip = ipaddr.parse(clientIp);
     // Check if the IP address is IPv4-mapped IPv6 address
     if (ip.kind() === 'ipv6' && ip instanceof ipaddr.IPv6 && ip.isIPv4MappedAddress()) {
