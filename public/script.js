@@ -571,6 +571,7 @@ export let chat_metadata = {};
 export let streamingProcessor = null;
 let crop_data = undefined;
 let is_delete_mode = false;
+let lastClickedMessageId = null;
 let fav_ch_checked = false;
 let scrollLock = false;
 export let abortStatusCheck = new AbortController();
@@ -855,8 +856,6 @@ export let online_status = 'no_connection';
 export let api_server = '';
 
 export let is_send_press = false; //Send generation
-
-let this_del_mes = -1;
 
 //message editing
 var this_edit_mes_chname = '';
@@ -7172,7 +7171,6 @@ function openMessageDelete(fromSlashCommand) {
             selected_group: ${selected_group}
             is_group_generating: ${is_group_generating}`);
     }
-    this_del_mes = -1;
     is_delete_mode = true;
 }
 
@@ -10019,20 +10017,32 @@ jQuery(async function () {
     chatElementScroll.addEventListener('wheel', chatScrollHandler, { passive: true });
     chatElementScroll.addEventListener('touchmove', chatScrollHandler, { passive: true });
 
-    $(document).on('click', '.mes', function () {
-        //when a 'delete message' parent div is clicked
-        // and we are in delete mode and del_checkbox is visible
+    $(document).on('click', '.mes', function (event) {
         if (!is_delete_mode || !$(this).children('.del_checkbox').is(':visible')) {
             return;
         }
+        const messageId = Number($(this).attr('mesid'));
 
-        const checkbox = $(this).children('.del_checkbox');
+        if (event.shiftKey && lastClickedMessageId !== null) {
+            // Handle shift-click range selection
 
-        // force the checkbox to match the selected class state
-        const isCurrentlySelected = $(this).hasClass('selected');
-        checkbox.prop('checked', !isCurrentlySelected);
-        $(this).toggleClass('selected');
+            // Determine range boundaries
+            const start = Math.min(lastClickedMessageId, messageId);
+            const end = Math.max(lastClickedMessageId, messageId);
 
+            // Select all messages in range
+            for (let i = start; i <= end; i++) {
+                const mesElement = $(`.mes[mesid="${i}"]`);
+                mesElement.addClass('selected');
+                mesElement.children('.del_checkbox').prop('checked', true);
+            }
+        } else {
+            // Regular single message toggle
+            const isCurrentlySelected = $(this).hasClass('selected');
+            $(this).children('.del_checkbox').prop('checked', !isCurrentlySelected);
+            $(this).toggleClass('selected');
+            lastClickedMessageId = messageId;
+        }
     });
 
     $(document).on('click', '.PastChat_cross', function (e) {
@@ -10537,7 +10547,6 @@ jQuery(async function () {
             $(this).prop('checked', false);
         });
         showSwipeButtons();
-        this_del_mes = -1;
         is_delete_mode = false;
     });
 
@@ -10581,9 +10590,8 @@ jQuery(async function () {
         $('#chat .mes').last().addClass('last_mes');
 
         showSwipeButtons();
-        this_del_mes = -1;
         is_delete_mode = false;
-        console.log('[DeleteMode] Process complete');
+        console.log('[DeleteMode] Deletion complete');
     });
 
     $('#settings_preset').change(function () {
