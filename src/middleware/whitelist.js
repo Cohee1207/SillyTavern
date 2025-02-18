@@ -31,6 +31,11 @@ function getForwardedIp(req) {
         return undefined;
     }
 
+    // Check if X-Real-IP is available
+    if (req.headers['x-real-ip']) {
+        return req.headers['x-real-ip'].toString();
+    }
+
     // Check for X-Forwarded-For and parse if available
     if (req.headers['x-forwarded-for']) {
         const ipList = req.headers['x-forwarded-for'].toString().split(',').map(ip => ip.trim());
