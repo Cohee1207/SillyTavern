@@ -85,6 +85,11 @@ cookieSecret: ''
 disableCsrfProtection: false
 # Disable startup security checks - NOT RECOMMENDED
 securityOverride: false
+# -- RATE LIMITING CONFIGURATION --
+rateLimiting:
+  # Use X-Real-IP or X-Forwarded-For header instead of socket IP for rate limiting
+  # Enable this if you're behind a reverse proxy
+  preferRealIpHeader: false
 # -- ADVANCED CONFIGURATION --
 # Open the browser automatically
 autorun: true
