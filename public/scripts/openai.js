@@ -207,6 +207,9 @@ const custom_prompt_post_processing_types = {
     MERGE: 'merge',
     SEMI: 'semi',
     STRICT: 'strict',
+    PREFIX_MERGE:'prefix_merge',
+    PREFIX_SEMI: 'prefix_semi',
+    PREFIX_STRICT: 'prefix_strict',
 };
 
 const openrouter_middleout_types = {
@@ -2168,6 +2171,9 @@ function getStreamingReply(data, state) {
         }
         return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
     } else {
+        if (oai_settings.show_thoughts) {
+            state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning_content)?.[0]?.delta?.reasoning_content || '');
+        }
         return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
     }
 }
