@@ -2000,7 +2000,7 @@
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="range-block" data-source="deepseek,openrouter">
+                                    <div class="range-block" data-source="deepseek,openrouter,custom">
                                         <label for="openai_show_thoughts" class="checkbox_label widthFreeExpand">
                                             <input id="openai_show_thoughts" type="checkbox" />
                                             <span>
@@ -3347,6 +3347,9 @@
                                 <option data-i18n="prompt_post_processing_merge" value="merge">Merge consecutive roles</option>
                                 <option data-i18n="prompt_post_processing_semi" value="semi">Semi-strict (alternating roles)</option>
                                 <option data-i18n="prompt_post_processing_strict" value="strict">Strict (user first, alternating roles)</option>
+                                <option value="prefix_merge">Prefix + Merge consecutive roles</option>
+                                <option value="prefix_semi">Prefix + Semi-strict (alternating roles)</option>
+                                <option value="prefix_strict">Prefix + Strict (user first, alternating roles)</option>
                             </select>
                         </form>
                         <div id="01ai_form" data-source="01ai">

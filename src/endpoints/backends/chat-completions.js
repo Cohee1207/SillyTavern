@@ -76,6 +76,12 @@ function postProcessPrompt(messages, type, names) {
             return addAssistantPrefix(mergeMessages(messages, names, true, false));
         case 'deepseek-reasoner':
             return addAssistantPrefix(mergeMessages(messages, names, true, true));
+        case 'prefix_merge':
+            return addAssistantPrefix(messages);
+        case 'prefix_semi':
+            return addAssistantPrefix(mergeMessages(messages, names, true, false));
+        case 'prefix_strict':
+            return addAssistantPrefix(mergeMessages(messages, names, true, true));
         default:
             return messages;
     }
