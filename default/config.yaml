@@ -87,8 +87,8 @@ disableCsrfProtection: false
 securityOverride: false
 # -- RATE LIMITING CONFIGURATION --
 rateLimiting:
-  # Use X-Real-IP or X-Forwarded-For header instead of socket IP for rate limiting
-  # Enable this if you're behind a reverse proxy
+  # Use X-Real-IP header instead of socket IP for rate limiting
+  # Only enable this if you are using a properly configured reverse proxy (like Nginx/traefik/Caddy)
   preferRealIpHeader: false
 # -- ADVANCED CONFIGURATION --
 # Open the browser automatically
