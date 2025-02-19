@@ -25,3 +25,17 @@ export function getIpFromRequest(req) {
     }
     return clientIp;
 }
+
+/**
+ * Gets the IP address of the client when behind reverse proxy using x-real-ip header, falls back to socket remote address.
+ * This function should be used when the application is running behind a reverse proxy (e.g., Nginx, traefik, Caddy...).
+ * @param {import('express').Request} req Request object
+ * @returns {string} IP address of the client
+ */
+export function getRealIpFromHeader(req) {
+    if (req.headers['x-real-ip']) {
+        return req.headers['x-real-ip'].toString();
+    }
+
+    return getIpFromRequest(req);
+}

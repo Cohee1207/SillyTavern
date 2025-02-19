@@ -3,12 +3,15 @@ import crypto from 'node:crypto';
 import storage from 'node-persist';
 import express from 'express';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
-import { jsonParser, getIpFromRequest } from '../express-common.js';
+import { jsonParser, getIpFromRequest, getRealIpFromHeader } from '../express-common.js';
 import { color, Cache, getConfigValue } from '../util.js';
 import { KEY_PREFIX, getUserAvatar, toKey, getPasswordHash, getPasswordSalt } from '../users.js';
 
 const DISCREET_LOGIN = getConfigValue('enableDiscreetLogin', false);
+const PREFER_REAL_IP_HEADER = getConfigValue('rateLimiting.preferRealIpHeader', false);
 const MFA_CACHE = new Cache(5 * 60 * 1000);
+
+const getIpAddress = (request) => PREFER_REAL_IP_HEADER ? getRealIpFromHeader(request) : getIpFromRequest(request);
 
 export const router = express.Router();
 const loginLimiter = new RateLimiterMemory({
@@ -60,7 +63,7 @@ router.post('/login', jsonParser, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        const ip = getIpFromRequest(request);
+        const ip = getIpAddress(request);
         await loginLimiter.consume(ip);
 
         /** @type {import('../users.js').User} */
@@ -92,7 +95,7 @@ router.post('/login', jsonParser, async (request, response) => {
         return response.json({ handle: user.handle });
     } catch (error) {
         if (error instanceof RateLimiterRes) {
-            console.error('Login failed: Rate limited from', getIpFromRequest(request));
+            console.error('Login failed: Rate limited from', getIpAddress(request));
             return response.status(429).send({ error: 'Too many attempts. Try again later or recover your password.' });
         }
 
@@ -108,7 +111,7 @@ router.post('/recover-step1', jsonParser, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        const ip = getIpFromRequest(request);
+        const ip = getIpAddress(request);
         await recoverLimiter.consume(ip);
 
         /** @type {import('../users.js').User} */
@@ -132,7 +135,7 @@ router.post('/recover-step1', jsonParser, async (request, response) => {
         return response.sendStatus(204);
     } catch (error) {
         if (error instanceof RateLimiterRes) {
-            console.error('Recover step 1 failed: Rate limited from', getIpFromRequest(request));
+            console.error('Recover step 1 failed: Rate limited from', getIpAddress(request));
             return response.status(429).send({ error: 'Too many attempts. Try again later or contact your admin.' });
         }
 
@@ -150,7 +153,7 @@ router.post('/recover-step2', jsonParser, async (request, response) => {
 
         /** @type {import('../users.js').User} */
         const user = await storage.getItem(toKey(request.body.handle));
-        const ip = getIpFromRequest(request);
+        const ip = getIpAddress(request);
 
         if (!user) {
             console.error('Recover step 2 failed: User', request.body.handle, 'not found');
@@ -186,7 +189,7 @@ router.post('/recover-step2', jsonParser, async (request, response) => {
         return response.sendStatus(204);
     } catch (error) {
         if (error instanceof RateLimiterRes) {
-            console.error('Recover step 2 failed: Rate limited from', getIpFromRequest(request));
+            console.error('Recover step 2 failed: Rate limited from', getIpAddress(request));
             return response.status(429).send({ error: 'Too many attempts. Try again later or contact your admin.' });
         }
 

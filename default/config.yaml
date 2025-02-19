@@ -85,6 +85,11 @@ cookieSecret: ''
 disableCsrfProtection: false
 # Disable startup security checks - NOT RECOMMENDED
 securityOverride: false
+# -- RATE LIMITING CONFIGURATION --
+rateLimiting:
+  # Use X-Real-IP header instead of socket IP for rate limiting
+  # Only enable this if you are using a properly configured reverse proxy (like Nginx/traefik/Caddy)
+  preferRealIpHeader: false
 # -- ADVANCED CONFIGURATION --
 # Open the browser automatically
 autorun: true
