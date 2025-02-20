@@ -22,6 +22,24 @@ import { LOG_LEVELS } from './constants.js';
 let CACHED_CONFIG = null;
 
 /**
+ * Substitutes environment variables in the given text.
+ * Supports format `${ENV_VAR}` or `${ENV_VAR:-default}`.
+ * Raises exception if the environment variable is not set and no default value is provided.
+ * @param {string} configText
+ * @returns {string}
+ */
+function substituteEnvVars(configText) {
+    return configText.replace(/\$\{([^}]+)}/g, (match, p1) => {
+        const [envVar, defaultValue] = p1.split(':-');
+        const value = process.env[envVar.trim()];
+        if (!value && !p1.includes(':-')) {
+            throw new Error(`Environment variable ${envVar.trim()} is not set`);
+        }
+        return value || defaultValue?.trim() || '';
+    });
+}
+
+/**
  * Returns the config object from the config.yaml file.
  * @returns {object} Config object
  */
@@ -37,7 +55,8 @@ export function getConfig() {
     }
 
     try {
-        const config = yaml.parse(fs.readFileSync(path.join(process.cwd(), './config.yaml'), 'utf8'));
+        const configText = fs.readFileSync(path.join(process.cwd(), './config.yaml'), 'utf8');
+        const config = yaml.parse(substituteEnvVars(configText));
         CACHED_CONFIG = config;
         return config;
     } catch (error) {
