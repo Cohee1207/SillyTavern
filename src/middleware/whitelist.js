@@ -4,12 +4,11 @@ import process from 'node:process';
 import Handlebars from 'handlebars';
 import ipMatching from 'ip-matching';
 
-import { getIpFromRequest, getRealIpFromHeader } from '../express-common.js';
+import { getIpFromRequest } from '../express-common.js';
 import { color, getConfigValue, safeReadFileSync } from '../util.js';
 
 const whitelistPath = path.join(process.cwd(), './whitelist.txt');
 const enableForwardedWhitelist = getConfigValue('enableForwardedWhitelist', false);
-const preferRealIpHeader = getConfigValue('rateLimiting.preferRealIpHeader', false);
 let whitelist = getConfigValue('whitelist', []);
 let knownIPs = new Set();
 
@@ -59,7 +58,7 @@ export default function whitelistMiddleware(whitelistMode, listen) {
     );
 
     return function (req, res, next) {
-        const clientIp = preferRealIpHeader && !whitelistMode ? getRealIpFromHeader(req) : getIpFromRequest(req);
+        const clientIp = getIpFromRequest(req);
         const forwardedIp = getForwardedIp(req);
         const userAgent = req.headers['user-agent'];
 
