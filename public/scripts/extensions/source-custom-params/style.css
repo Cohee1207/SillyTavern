@@ -1,0 +1,20 @@
+.scp-param-name {
+    cursor: help;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.scp-param-item input[type="checkbox"] {
+    vertical-align: middle;
+    margin: 0 5px 0 0;
+}
+
+.scp-param-item .fa-circle-question {
+    vertical-align: middle;
+    font-size: 0.9em;
+}
+
+.scp-param-item .flex-container {
+    align-items: center;
+}

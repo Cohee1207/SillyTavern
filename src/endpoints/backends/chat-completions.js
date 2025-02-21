@@ -63,7 +63,6 @@ const API_DEEPSEEK = 'https://api.deepseek.com/beta';
  * @returns
  */
 function postProcessPrompt(messages, type, names) {
-    const addAssistantPrefix = x => x.length && (x[x.length - 1].role !== 'assistant' || (x[x.length - 1].prefix = true)) ? x : x;
     switch (type) {
         case 'merge':
         case 'claude':
@@ -73,9 +72,9 @@ function postProcessPrompt(messages, type, names) {
         case 'strict':
             return mergeMessages(messages, names, true, true);
         case 'deepseek':
-            return addAssistantPrefix(mergeMessages(messages, names, true, false));
+            return mergeMessages(messages, names, true, false);
         case 'deepseek-reasoner':
-            return addAssistantPrefix(mergeMessages(messages, names, true, true));
+            return mergeMessages(messages, names, true, true);
         default:
             return messages;
     }

@@ -1,0 +1,12 @@
+{
+    "display_name": "SourceCustomParams",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "script.js",
+    "css": "style.css",
+    "author": "巡夜子Yokuminto",
+    "version": "1.0.0",
+    "homePage": "https://github.com/SillyTavern/SillyTavern",
+    "auto_update": true
+}
