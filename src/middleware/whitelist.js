@@ -8,7 +8,7 @@ import { getIpFromRequest } from '../express-common.js';
 import { color, getConfigValue, safeReadFileSync } from '../util.js';
 
 const whitelistPath = path.join(process.cwd(), './whitelist.txt');
-const enableForwardedWhitelist = getConfigValue('enableForwardedWhitelist', false);
+const enableForwardedWhitelist = getConfigValue('enableForwardedWhitelist', false, 'boolean');
 let whitelist = getConfigValue('whitelist', []);
 
 if (fs.existsSync(whitelistPath)) {

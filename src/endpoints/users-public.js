@@ -7,8 +7,8 @@ import { jsonParser, getIpFromRequest, getRealIpFromHeader } from '../express-co
 import { color, Cache, getConfigValue } from '../util.js';
 import { KEY_PREFIX, getUserAvatar, toKey, getPasswordHash, getPasswordSalt } from '../users.js';
 
-const DISCREET_LOGIN = getConfigValue('enableDiscreetLogin', false);
-const PREFER_REAL_IP_HEADER = getConfigValue('rateLimiting.preferRealIpHeader', false);
+const DISCREET_LOGIN = getConfigValue('enableDiscreetLogin', false, 'boolean');
+const PREFER_REAL_IP_HEADER = getConfigValue('rateLimiting.preferRealIpHeader', false, 'boolean');
 const MFA_CACHE = new Cache(5 * 60 * 1000);
 
 const getIpAddress = (request) => PREFER_REAL_IP_HEADER ? getRealIpFromHeader(request) : getIpFromRequest(request);

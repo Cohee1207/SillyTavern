@@ -106,8 +106,8 @@ async function sendClaudeRequest(request, response) {
     const apiUrl = new URL(request.body.reverse_proxy || API_CLAUDE).toString();
     const apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.CLAUDE);
     const divider = '-'.repeat(process.stdout.columns);
-    const enableSystemPromptCache = getConfigValue('claude.enableSystemPromptCache', false) && request.body.model.startsWith('claude-3');
-    let cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1);
+    const enableSystemPromptCache = getConfigValue('claude.enableSystemPromptCache', false, 'boolean') && request.body.model.startsWith('claude-3');
+    let cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1, 'number');
     // Disabled if not an integer or negative, or if the model doesn't support it
     if (!Number.isInteger(cachingAtDepth) || cachingAtDepth < 0 || !request.body.model.startsWith('claude-3')) {
         cachingAtDepth = -1;
@@ -969,7 +969,7 @@ router.post('/generate', jsonParser, function (request, response) {
             bodyParams.logprobs = true;
         }
 
-        if (getConfigValue('openai.randomizeUserId', false)) {
+        if (getConfigValue('openai.randomizeUserId', false, 'boolean')) {
             bodyParams['user'] = uuidv4();
         }
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.OPENROUTER) {
@@ -1008,7 +1008,7 @@ router.post('/generate', jsonParser, function (request, response) {
             bodyParams['include_reasoning'] = true;
         }
 
-        let cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1);
+        let cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1, 'number');
         if (Number.isInteger(cachingAtDepth) && cachingAtDepth >= 0 && request.body.model?.startsWith('anthropic/claude-3')) {
             cachingAtDepthForOpenRouterClaude(request.body.messages, cachingAtDepth);
         }

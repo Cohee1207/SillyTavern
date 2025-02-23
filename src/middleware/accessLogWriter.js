@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { getRealIpFromHeader } from '../express-common.js';
 import { color, getConfigValue } from '../util.js';
 
-const enableAccessLog = getConfigValue('logging.enableAccessLog', true);
+const enableAccessLog = getConfigValue('logging.enableAccessLog', true, 'boolean');
 
 const knownIPs = new Set();
 

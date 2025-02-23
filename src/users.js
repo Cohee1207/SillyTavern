@@ -15,15 +15,15 @@ import _ from 'lodash';
 import { sync as writeFileAtomicSync } from 'write-file-atomic';
 
 import { USER_DIRECTORY_TEMPLATE, DEFAULT_USER, PUBLIC_DIRECTORIES, SETTINGS_FILE } from './constants.js';
-import { getConfigValue, color, delay, setConfigValue, generateTimestamp } from './util.js';
+import { getConfigValue, color, delay, generateTimestamp } from './util.js';
 import { readSecret, writeSecret } from './endpoints/secrets.js';
 import { getContentOfType } from './endpoints/content-manager.js';
 
 export const KEY_PREFIX = 'user:';
 const AVATAR_PREFIX = 'avatar:';
-const ENABLE_ACCOUNTS = getConfigValue('enableUserAccounts', false);
-const AUTHELIA_AUTH = getConfigValue('autheliaAuth', false);
-const PER_USER_BASIC_AUTH = getConfigValue('perUserBasicAuth', false);
+const ENABLE_ACCOUNTS = getConfigValue('enableUserAccounts', false, 'boolean');
+const AUTHELIA_AUTH = getConfigValue('autheliaAuth', false, 'boolean');
+const PER_USER_BASIC_AUTH = getConfigValue('perUserBasicAuth', false, 'boolean');
 const ANON_CSRF_SECRET = crypto.randomBytes(64).toString('base64');
 
 /**
@@ -32,9 +32,13 @@ const ANON_CSRF_SECRET = crypto.randomBytes(64).toString('base64');
  */
 const DIRECTORIES_CACHE = new Map();
 const PUBLIC_USER_AVATAR = '/img/default-user.png';
+const COOKIE_SECRET_PATH = 'cookie-secret.txt';
 
 const STORAGE_KEYS = {
     csrfSecret: 'csrfSecret',
+    /**
+     * @deprecated Read from COOKIE_SECRET_PATH in DATA_ROOT instead.
+     */
     cookieSecret: 'cookieSecret',
 };
 
@@ -412,11 +416,10 @@ export function toAvatarKey(handle) {
  * @returns {Promise<void>}
  */
 export async function initUserStorage(dataRoot) {
-    globalThis.DATA_ROOT = dataRoot;
-    console.log('Using data root:', color.green(globalThis.DATA_ROOT));
+    console.log('Using data root:', color.green(dataRoot));
     console.log();
     await storage.init({
-        dir: path.join(globalThis.DATA_ROOT, '_storage'),
+        dir: path.join(dataRoot, '_storage'),
         ttl: false, // Never expire
     });
 
@@ -430,17 +433,29 @@ export async function initUserStorage(dataRoot) {
 
 /**
  * Get the cookie secret from the config. If it doesn't exist, generate a new one.
+ * @param {string} dataRoot The root directory for user data
  * @returns {string} The cookie secret
  */
-export function getCookieSecret() {
-    let secret = getConfigValue(STORAGE_KEYS.cookieSecret);
+export function getCookieSecret(dataRoot) {
+    const cookieSecretPath = path.join(dataRoot, COOKIE_SECRET_PATH);
 
-    if (!secret) {
-        console.warn(color.yellow('Cookie secret is missing from config.yaml. Generating a new one...'));
-        secret = crypto.randomBytes(64).toString('base64');
-        setConfigValue(STORAGE_KEYS.cookieSecret, secret);
+    if (fs.existsSync(cookieSecretPath)) {
+        const stat = fs.statSync(cookieSecretPath);
+        if (stat.size > 0) {
+            return fs.readFileSync(cookieSecretPath, 'utf8');
+        }
     }
 
+    const oldSecret = getConfigValue(STORAGE_KEYS.cookieSecret);
+    if (oldSecret) {
+        console.log('Migrating cookie secret from config.yaml...');
+        writeFileAtomicSync(cookieSecretPath, oldSecret, { encoding: 'utf8' });
+        return oldSecret;
+    }
+
+    console.warn(color.yellow('Cookie secret is missing from data root. Generating a new one...'));
+    const secret = crypto.randomBytes(64).toString('base64');
+    writeFileAtomicSync(cookieSecretPath, secret, { encoding: 'utf8' });
     return secret;
 }
 

@@ -165,7 +165,7 @@ async function seedContentForUser(contentIndex, directories, forceCategories) {
  */
 export async function checkForNewContent(directoriesList, forceCategories = []) {
     try {
-        const contentCheckSkip = getConfigValue('skipContentCheck', false);
+        const contentCheckSkip = getConfigValue('skipContentCheck', false, 'boolean');
         if (contentCheckSkip && forceCategories?.length === 0) {
             return;
         }

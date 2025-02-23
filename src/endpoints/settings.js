@@ -11,9 +11,9 @@ import { jsonParser } from '../express-common.js';
 import { getAllUserHandles, getUserDirectories } from '../users.js';
 import { getFileNameValidationFunction } from '../middleware/validateFileName.js';
 
-const ENABLE_EXTENSIONS = !!getConfigValue('extensions.enabled', true);
-const ENABLE_EXTENSIONS_AUTO_UPDATE = !!getConfigValue('extensions.autoUpdate', true);
-const ENABLE_ACCOUNTS = getConfigValue('enableUserAccounts', false);
+const ENABLE_EXTENSIONS = getConfigValue('extensions.enabled', true, 'boolean');
+const ENABLE_EXTENSIONS_AUTO_UPDATE = getConfigValue('extensions.autoUpdate', true, 'boolean');
+const ENABLE_ACCOUNTS = getConfigValue('enableUserAccounts', false, 'boolean');
 
 // 10 minutes
 const AUTOSAVE_INTERVAL = 10 * 60 * 1000;

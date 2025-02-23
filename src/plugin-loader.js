@@ -7,8 +7,8 @@ import { default as git, CheckRepoActions } from 'simple-git';
 import { sync as commandExistsSync } from 'command-exists';
 import { getConfigValue, color } from './util.js';
 
-const enableServerPlugins = !!getConfigValue('enableServerPlugins', false);
-const enableServerPluginsAutoUpdate = !!getConfigValue('enableServerPluginsAutoUpdate', true);
+const enableServerPlugins = getConfigValue('enableServerPlugins', false, 'boolean');
+const enableServerPluginsAutoUpdate = getConfigValue('enableServerPluginsAutoUpdate', true, 'boolean');
 
 /**
  * Map of loaded plugins.

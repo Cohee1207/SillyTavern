@@ -24,7 +24,7 @@ import { importRisuSprites } from './sprites.js';
 const defaultAvatarPath = './public/img/ai4.png';
 
 // KV-store for parsed character data
-const cacheCapacity = Number(getConfigValue('cardsCacheCapacity', 100)); // MB
+const cacheCapacity = getConfigValue('cardsCacheCapacity', 100, 'number'); // MB
 // With 100 MB limit it would take roughly 3000 characters to reach this limit
 const characterDataCache = new MemoryLimitedMap(1024 * 1024 * cacheCapacity);
 // Some Android devices require tighter memory management

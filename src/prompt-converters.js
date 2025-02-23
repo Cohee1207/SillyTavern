@@ -572,7 +572,7 @@ export function convertMistralMessages(messages, names) {
     }
 
     // Make the last assistant message a prefill
-    const prefixEnabled = getConfigValue('mistral.enablePrefix', false);
+    const prefixEnabled = getConfigValue('mistral.enablePrefix', false, 'boolean');
     const lastMsg = messages[messages.length - 1];
     if (prefixEnabled && messages.length > 0 && lastMsg?.role === 'assistant') {
         lastMsg.prefix = true;

@@ -56,7 +56,7 @@ export const TEXT_COMPLETION_MODELS = [
 ];
 
 const CHARS_PER_TOKEN = 3.35;
-const IS_DOWNLOAD_ALLOWED = getConfigValue('enableDownloadableTokenizers', true);
+const IS_DOWNLOAD_ALLOWED = getConfigValue('enableDownloadableTokenizers', true, 'boolean');
 
 /**
  * Gets a path to the tokenizer model. Downloads the model if it's a URL.

@@ -9,7 +9,6 @@ import { promises as dnsPromise } from 'node:dns';
 
 import yaml from 'yaml';
 import { sync as commandExistsSync } from 'command-exists';
-import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import _ from 'lodash';
 import yauzl from 'yauzl';
 import mime from 'mime-types';
@@ -20,6 +19,14 @@ import { LOG_LEVELS } from './constants.js';
  * Parsed config object.
  */
 let CACHED_CONFIG = null;
+
+/**
+ * Converts a configuration key to an environment variable key.
+ * @param {string} key Configuration key
+ * @returns {string} Environment variable key
+ * @example keyToEnv('extensions.models.speechToText') // 'SILLYTAVERN_EXTENSIONS_MODELS_SPEECHTOTEXT'
+ */
+export const keyToEnv = (key) => 'SILLYTAVERN_' + String(key).toUpperCase().replace(/\./g, '_');
 
 /**
  * Returns the config object from the config.yaml file.
@@ -51,24 +58,38 @@ export function getConfig() {
  * Returns the value for the given key from the config object.
  * @param {string} key - Key to get from the config object
  * @param {any} defaultValue - Default value to return if the key is not found
+ * @param {'number'|'boolean'|null} typeConverter - Type to convert the value to
  * @returns {any} Value for the given key
  */
-export function getConfigValue(key, defaultValue = null) {
-    const config = getConfig();
-    return _.get(config, key, defaultValue);
+export function getConfigValue(key, defaultValue = null, typeConverter = null) {
+    function _getValue() {
+        const envKey = keyToEnv(key);
+        if (envKey in process.env) {
+            return process.env[envKey];
+        }
+        const config = getConfig();
+        return _.get(config, key, defaultValue);
+    }
+
+    const value = _getValue();
+    switch (typeConverter) {
+        case 'number':
+            return Number(value);
+        case 'boolean':
+            return toBoolean(value);
+        default:
+            return value;
+    }
 }
 
 /**
- * Sets a value for the given key in the config object and writes it to the config.yaml file.
- * @param {string} key Key to set
- * @param {any} value Value to set
+ * THIS FUNCTION IS DEPRECATED AND ONLY EXISTS FOR BACKWARDS COMPATIBILITY. DON'T USE IT.
+ * @param {any} _key Unused
+ * @param {any} _value Unused
+ * @deprecated Configs are read-only. Use environment variables instead.
  */
-export function setConfigValue(key, value) {
-    // Reset cache so that the next getConfig call will read the updated config file
-    CACHED_CONFIG = null;
-    const config = getConfig();
-    _.set(config, key, value);
-    writeFileAtomicSync('./config.yaml', yaml.stringify(config));
+export function setConfigValue(_key, _value) {
+    console.trace(color.yellow('setConfigValue is deprecated and should not be used.'));
 }
 
 /**
@@ -394,7 +415,7 @@ export function generateTimestamp() {
  * @param {number?} limit Maximum number of backups to keep. If null, the limit is determined by the `backups.common.numberOfBackups` config value.
  */
 export function removeOldBackups(directory, prefix, limit = null) {
-    const MAX_BACKUPS = limit ?? Number(getConfigValue('backups.common.numberOfBackups', 50));
+    const MAX_BACKUPS = limit ?? Number(getConfigValue('backups.common.numberOfBackups', 50, 'number'));
 
     let files = fs.readdirSync(directory).filter(f => f.startsWith(prefix));
     if (files.length > MAX_BACKUPS) {
@@ -747,6 +768,27 @@ export async function canResolve(name, useIPv6 = true, useIPv4 = true) {
     }
 }
 
+/**
+ * Converts various JavaScript primitives to boolean values.
+ * Handles special case for "true"/"false" strings (case-insensitive)
+ *
+ * @param {any} value - The value to convert to boolean
+ * @returns {boolean} - The boolean representation of the value
+ */
+export function toBoolean(value) {
+    // Handle string values case-insensitively
+    if (typeof value === 'string') {
+        // Trim and convert to lowercase for case-insensitive comparison
+        const trimmedLower = value.trim().toLowerCase();
+
+        // Handle explicit "true"/"false" strings
+        if (trimmedLower === 'true') return true;
+        if (trimmedLower === 'false') return false;
+    }
+
+    // Handle all other JavaScript values based on their "truthiness"
+    return Boolean(value);
+}
 
 /**
  * converts string to boolean accepts 'true' or 'false' else it returns the string put in
@@ -754,8 +796,8 @@ export async function canResolve(name, useIPv6 = true, useIPv4 = true) {
  * @returns {boolean|string|null} boolean else original input string or null if input is
  */
 export function stringToBool(str) {
-    if (str === 'true') return true;
-    if (str === 'false') return false;
+    if (String(str).trim().toLowerCase() === 'true') return true;
+    if (String(str).trim().toLowerCase() === 'false') return false;
     return str;
 }
 
@@ -763,7 +805,7 @@ export function stringToBool(str) {
  * Setup the minimum log level
  */
 export function setupLogLevel() {
-    const logLevel = getConfigValue('logging.minLogLevel', LOG_LEVELS.DEBUG);
+    const logLevel = getConfigValue('logging.minLogLevel', LOG_LEVELS.DEBUG, 'number');
 
     globalThis.console.debug = logLevel <= LOG_LEVELS.DEBUG ? console.debug : () => {};
     globalThis.console.info = logLevel <= LOG_LEVELS.INFO ? console.info : () => {};

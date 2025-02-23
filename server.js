@@ -261,47 +261,47 @@ app.use(responseTime());
 
 
 /** @type {number} */
-const server_port = cliArguments.port ?? process.env.SILLY_TAVERN_PORT ?? getConfigValue('port', DEFAULT_PORT);
+const server_port = cliArguments.port ?? getConfigValue('port', DEFAULT_PORT, 'number');
 /** @type {boolean} */
-const autorun = (cliArguments.autorun ?? getConfigValue('autorun', DEFAULT_AUTORUN)) && !cliArguments.ssl;
+const autorun = (cliArguments.autorun ?? getConfigValue('autorun', DEFAULT_AUTORUN, 'boolean')) && !cliArguments.ssl;
 /** @type {boolean} */
-const listen = cliArguments.listen ?? getConfigValue('listen', DEFAULT_LISTEN);
+const listen = cliArguments.listen ?? getConfigValue('listen', DEFAULT_LISTEN, 'boolean');
 /** @type {string} */
 const listenAddressIPv6 = cliArguments.listenAddressIPv6 ?? getConfigValue('listenAddress.ipv6', DEFAULT_LISTEN_ADDRESS_IPV6);
 /** @type {string} */
 const listenAddressIPv4 = cliArguments.listenAddressIPv4 ?? getConfigValue('listenAddress.ipv4', DEFAULT_LISTEN_ADDRESS_IPV4);
 /** @type {boolean} */
-const enableCorsProxy = cliArguments.corsProxy ?? getConfigValue('enableCorsProxy', DEFAULT_CORS_PROXY);
-const enableWhitelist = cliArguments.whitelist ?? getConfigValue('whitelistMode', DEFAULT_WHITELIST);
+const enableCorsProxy = cliArguments.corsProxy ?? getConfigValue('enableCorsProxy', DEFAULT_CORS_PROXY, 'boolean');
+const enableWhitelist = cliArguments.whitelist ?? getConfigValue('whitelistMode', DEFAULT_WHITELIST, 'boolean');
 /** @type {string} */
-const dataRoot = cliArguments.dataRoot ?? getConfigValue('dataRoot', './data');
+globalThis.DATA_ROOT = cliArguments.dataRoot ?? getConfigValue('dataRoot', './data');
 /** @type {boolean} */
-const disableCsrf = cliArguments.disableCsrf ?? getConfigValue('disableCsrfProtection', DEFAULT_CSRF_DISABLED);
-const basicAuthMode = cliArguments.basicAuthMode ?? getConfigValue('basicAuthMode', DEFAULT_BASIC_AUTH);
-const perUserBasicAuth = getConfigValue('perUserBasicAuth', DEFAULT_PER_USER_BASIC_AUTH);
+const disableCsrf = cliArguments.disableCsrf ?? getConfigValue('disableCsrfProtection', DEFAULT_CSRF_DISABLED, 'boolean');
+const basicAuthMode = cliArguments.basicAuthMode ?? getConfigValue('basicAuthMode', DEFAULT_BASIC_AUTH, 'boolean');
+const perUserBasicAuth = getConfigValue('perUserBasicAuth', DEFAULT_PER_USER_BASIC_AUTH, 'boolean');
 /** @type {boolean} */
-const enableAccounts = getConfigValue('enableUserAccounts', DEFAULT_ACCOUNTS);
+const enableAccounts = getConfigValue('enableUserAccounts', DEFAULT_ACCOUNTS, 'boolean');
 
-const uploadsPath = path.join(dataRoot, UPLOADS_DIRECTORY);
+const uploadsPath = path.join(globalThis.DATA_ROOT, UPLOADS_DIRECTORY);
 
 
-/** @type {boolean | "auto"} */
-let enableIPv6 = stringToBool(cliArguments.enableIPv6) ?? getConfigValue('protocol.ipv6', DEFAULT_ENABLE_IPV6);
-/** @type {boolean | "auto"} */
-let enableIPv4 = stringToBool(cliArguments.enableIPv4) ?? getConfigValue('protocol.ipv4', DEFAULT_ENABLE_IPV4);
+/** @type {boolean | string} */
+let enableIPv6 = stringToBool(cliArguments.enableIPv6) ?? stringToBool(getConfigValue('protocol.ipv6', DEFAULT_ENABLE_IPV6)) ?? DEFAULT_ENABLE_IPV6;
+/** @type {boolean | string} */
+let enableIPv4 = stringToBool(cliArguments.enableIPv4) ?? stringToBool(getConfigValue('protocol.ipv4', DEFAULT_ENABLE_IPV4)) ?? DEFAULT_ENABLE_IPV4;
 
 /** @type {string} */
 const autorunHostname = cliArguments.autorunHostname ?? getConfigValue('autorunHostname', DEFAULT_AUTORUN_HOSTNAME);
 /** @type {number} */
-const autorunPortOverride = cliArguments.autorunPortOverride ?? getConfigValue('autorunPortOverride', DEFAULT_AUTORUN_PORT);
+const autorunPortOverride = cliArguments.autorunPortOverride ?? getConfigValue('autorunPortOverride', DEFAULT_AUTORUN_PORT, 'number');
 
 /** @type {boolean} */
-const dnsPreferIPv6 = cliArguments.dnsPreferIPv6 ?? getConfigValue('dnsPreferIPv6', DEFAULT_PREFER_IPV6);
+const dnsPreferIPv6 = cliArguments.dnsPreferIPv6 ?? getConfigValue('dnsPreferIPv6', DEFAULT_PREFER_IPV6, 'boolean');
 
 /** @type {boolean} */
-const avoidLocalhost = cliArguments.avoidLocalhost ?? getConfigValue('avoidLocalhost', DEFAULT_AVOID_LOCALHOST);
+const avoidLocalhost = cliArguments.avoidLocalhost ?? getConfigValue('avoidLocalhost', DEFAULT_AVOID_LOCALHOST, 'boolean');
 
-const proxyEnabled = cliArguments.requestProxyEnabled ?? getConfigValue('requestProxy.enabled', DEFAULT_PROXY_ENABLED);
+const proxyEnabled = cliArguments.requestProxyEnabled ?? getConfigValue('requestProxy.enabled', DEFAULT_PROXY_ENABLED, 'boolean');
 const proxyUrl = cliArguments.requestProxyUrl ?? getConfigValue('requestProxy.url', DEFAULT_PROXY_URL);
 const proxyBypass = cliArguments.requestProxyBypass ?? getConfigValue('requestProxy.bypass', DEFAULT_PROXY_BYPASS);
 
@@ -403,7 +403,7 @@ if (enableCorsProxy) {
 
 function getSessionCookieAge() {
     // Defaults to "no expiration" if not set
-    const configValue = getConfigValue('sessionTimeout', -1);
+    const configValue = getConfigValue('sessionTimeout', -1, 'number');
 
     // Convert to milliseconds
     if (configValue > 0) {
@@ -474,7 +474,7 @@ app.use(cookieSession({
     sameSite: 'strict',
     httpOnly: true,
     maxAge: getSessionCookieAge(),
-    secret: getCookieSecret(),
+    secret: getCookieSecret(globalThis.DATA_ROOT),
 }));
 
 app.use(setUserDataMiddleware);
@@ -884,8 +884,9 @@ const postSetupTasks = async function (v6Failed, v4Failed, useIPv6, useIPv4) {
                 'Per-user basic authentication is enabled, but user accounts are disabled. This configuration may be insecure.',
             ));
         } else if (!perUserBasicAuth) {
-            const basicAuthUser = getConfigValue('basicAuthUser', {});
-            if (!basicAuthUser?.username || !basicAuthUser?.password) {
+            const basicAuthUserName = getConfigValue('basicAuthUser.username', '');
+            const basicAuthUserPassword = getConfigValue('basicAuthUser.password', '');
+            if (!basicAuthUserName || !basicAuthUserPassword) {
                 console.warn(color.yellow(
                     'Basic Authentication is enabled, but username or password is not set or empty!',
                 ));
@@ -932,7 +933,7 @@ function setWindowTitle(title) {
 function logSecurityAlert(message) {
     if (basicAuthMode || enableWhitelist) return; // safe!
     console.error(color.red(message));
-    if (getConfigValue('securityOverride', false)) {
+    if (getConfigValue('securityOverride', false, 'boolean')) {
         console.warn(color.red('Security has been overridden. If it\'s not a trusted network, change the settings.'));
         return;
     }
@@ -1145,7 +1146,7 @@ function apply404Middleware() {
 }
 
 // User storage module needs to be initialized before starting the server
-initUserStorage(dataRoot)
+initUserStorage(globalThis.DATA_ROOT)
     .then(ensurePublicDirectoriesExist)
     .then(migrateUserData)
     .then(migrateSystemPrompts)

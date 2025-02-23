@@ -77,8 +77,6 @@ perUserBasicAuth: false
 ## Set to 0 to expire session when the browser is closed
 ## Set to a negative number to disable session expiration
 sessionTimeout: -1
-# Used to sign session cookies. Will be auto-generated if not set
-cookieSecret: ''
 # Disable CSRF protection - NOT RECOMMENDED
 disableCsrfProtection: false
 # Disable startup security checks - NOT RECOMMENDED

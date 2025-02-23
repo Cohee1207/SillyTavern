@@ -372,8 +372,8 @@ router.post('/generate', jsonParser, async function (request, response) {
         }
 
         if (request.body.api_type === TEXTGEN_TYPES.OLLAMA) {
-            const keepAlive = getConfigValue('ollama.keepAlive', -1);
-            const numBatch = getConfigValue('ollama.batchSize', -1);
+            const keepAlive = getConfigValue('ollama.keepAlive', -1, 'number');
+            const numBatch = getConfigValue('ollama.batchSize', -1, 'number');
             if (numBatch > 0) {
                 request.body['num_batch'] = numBatch;
             }
